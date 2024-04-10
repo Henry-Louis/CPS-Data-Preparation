@@ -36,16 +36,29 @@ def download_cps_dict(dict_url_list: List[str], dict_dir: Path):
                 print(f"An error occurred: {e}")
 
 def rename_cps_dict_files(dict_dir: Path, dict_file_list: List[Path], dict_start_time_list: List[str]) -> None:
-    # Rename the downloaded files to match the start time of the data
+    """
+    Renames the downloaded dictionary files to match the start time of the data.
+
+    Args:
+        dict_dir (Path): The directory where dictionary files are located.
+        dict_file_list (List[Path]): A list of paths to the dictionary files.
+        dict_start_time_list (List[str]): A list of start times corresponding to each dictionary file.
+    """
     for dict_file, start_time in zip(dict_file_list, dict_start_time_list):
         new_dict_file = dict_dir / f"cps_dict_{start_time}.txt"
         if new_dict_file.exists():
             print(f"Already renamed {new_dict_file}")
         else:
-            # save a new copy of the file with the new name
-            with open(dict_file, "r") as f:
-                with open(new_dict_file, "w") as f_new:
-                    f_new.write(f.read())
+            try:
+                with open(dict_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+            except UnicodeDecodeError:
+                # Attempt to read with a different encoding if UTF-8 fails
+                with open(dict_file, "r", encoding="ISO-8859-1") as f:
+                    content = f.read()
+
+            with open(new_dict_file, "w", encoding="utf-8") as f_new:
+                f_new.write(content)
 
 # Download the CPS data files
 def download_cps_data(years: List[int], months: List[str], data_dir: Path):
@@ -68,9 +81,16 @@ def download_cps_data(years: List[int], months: List[str], data_dir: Path):
             except Exception as e:
                 print(f"An error occurred: {e}")
 
-def extract_file(gz_file: Path, data_file: Path) -> None:
+def extract_file(gz_file: Path, output_file: Path) -> None:
+    """
+    Extracts the contents of a gzip-compressed file.
+
+    Args:
+        gz_file (Path): The path to the gzip file to be extracted.
+        output_file (Path): The path where the extracted contents will be saved.
+    """
     with gzip.open(gz_file, "rb") as f_in:
-        with open(data_file, "wb") as f_out:
+        with open(output_file, "wb") as f_out:
             f_out.write(f_in.read())
 
 def extract_gz_files(input_dir: Path, output_dir: Path) -> None:
