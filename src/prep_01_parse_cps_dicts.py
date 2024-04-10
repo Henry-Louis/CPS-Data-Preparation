@@ -138,7 +138,8 @@ def parse_cps_dict_normal():
 
 def parse_cps_dict_1998(dict_file: Path) -> pd.DataFrame:
     """
-    Parse a CPS dictionary file from 1998.
+    Parse the CPS dictionary file for 1998.
+    
     Parameters
     ----------
     dict_file : Path
