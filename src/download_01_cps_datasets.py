@@ -110,13 +110,6 @@ def extract_gz_files(input_dir: Path, output_dir: Path) -> None:
             except Exception as e:
                 print(f"An error occurred: {e}")
 
-# Parse the CPS data files
-def parse_cps_data(data_file: Path, dict_file: Path) -> None:
-    pass
-
-def parse_cps_data_files(data_dir: Path, dict_dir: Path) -> None:
-    pass
-
 # Main function
 def main() -> None:
     # Download the CPS dictionary files
@@ -129,7 +122,6 @@ def main() -> None:
     months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
     download_cps_data(years, months, CPS_DATA_DIR / "gz")
     extract_gz_files(CPS_DATA_DIR / "gz", CPS_DATA_DIR / "unparsed")
-    parse_cps_data_files(CPS_DATA_DIR / "unparsed", CPS_DICT_DIR)
     
 if __name__ == "__main__":
     main()

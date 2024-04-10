@@ -11,6 +11,9 @@ CPS_DATA_UNPARSED_DIR = CPS_DATA_DIR / "unparsed"
 CPS_DATA_PARSED_DIR = CPS_DATA_DIR / "parsed"
 CPS_DICT_DIR = DATA_RAW_DIR / "cps_dict"
 
+PARSED_DICT_DIR = DATA_PROCESSED_DIR / "parsed_dict"
+PARSED_DATA_DIR = DATA_PROCESSED_DIR / "parsed_data"
+
 CPS_DATA_URL_TEMPLATE = "https://www2.census.gov/programs-surveys/cps/datasets/{year_int4}/basic/{mon_str3}{year_int2}pub.dat.gz"
 
 CPS_DICT_URL_LIST = [
@@ -47,3 +50,5 @@ CPS_DICT_START_TIME_LIST = [
     "199509", "199506", "199404", "199401"
 ]
 
+CPS_DICT_FILE_LIST = [CPS_DICT_DIR / f"cps_dict_{start_time}.txt" for start_time in CPS_DICT_START_TIME_LIST]
+PARSED_DICT_FILE_LIST = [PARSED_DICT_DIR / f"cps_dict_{start_time}.csv" for start_time in CPS_DICT_START_TIME_LIST]
