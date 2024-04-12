@@ -1,21 +1,23 @@
 from pathlib import Path
 
+# Define the root directory of the project
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
 DATA_RAW_DIR = DATA_DIR / "raw"
 DATA_PROCESSED_DIR = DATA_DIR / "processed"
 
+# Define the directories for the CPS data
 CPS_DATA_DIR = DATA_RAW_DIR / "cps_data"
 CPS_DATA_GZ_DIR = CPS_DATA_DIR / "gz"
 CPS_DATA_UNPARSED_DIR = CPS_DATA_DIR / "unparsed"
-CPS_DATA_PARSED_DIR = CPS_DATA_DIR / "parsed"
-CPS_DICT_DIR = DATA_RAW_DIR / "cps_dict"
-
-PARSED_DICT_DIR = DATA_PROCESSED_DIR / "parsed_dict"
 PARSED_DATA_DIR = DATA_PROCESSED_DIR / "parsed_data"
 
-CPS_DATA_URL_TEMPLATE = "https://www2.census.gov/programs-surveys/cps/datasets/{year_int4}/basic/{mon_str3}{year_int2}pub.dat.gz"
+# Define the directories for the CPS dictionary
+RAW_CPS_DICT_DIR = DATA_RAW_DIR / "cps_dict"
+PARSED_DICT_DIR = DATA_PROCESSED_DIR / "parsed_dict"
 
+# Define the URLs for the CPS data and dictionary
+CPS_DATA_URL_TEMPLATE = "https://www2.census.gov/programs-surveys/cps/datasets/{year_int4}/basic/{mon_str3}{year_int2}pub.dat.gz"
 CPS_DICT_URL_LIST = [
     "https://www2.census.gov/programs-surveys/cps/datasets/2024/basic/2024_Basic_CPS_Public_Use_Record_Layout_plus_IO_Code_list.txt",
     "https://www2.census.gov/programs-surveys/cps/datasets/2023/basic/2023_Basic_CPS_Public_Use_Record_Layout_plus_IO_Code_list.txt",
@@ -42,7 +44,6 @@ CPS_DICT_URL_LIST = [
     "https://www2.census.gov/programs-surveys/cps/datasets/1995/basic/apr94_may95_dd.txt",
     "https://www2.census.gov/programs-surveys/cps/datasets/1994/basic/jan94_mar94_dd.txt",
 ]
-
 CPS_DICT_START_TIME_LIST = [
     "202401", "202301", "202201", "202101", "202001", 
     "201701", "201501", "201401", "201301",
@@ -50,12 +51,15 @@ CPS_DICT_START_TIME_LIST = [
     "199509", "199506", "199404", "199401"
 ]
 
-CPS_DICT_FILE_LIST = [CPS_DICT_DIR / f"cps_dict_{start_time}.txt" for start_time in CPS_DICT_START_TIME_LIST]
-PARSED_DICT_FILE_LIST = [PARSED_DICT_DIR / f"cps_dict_{start_time}.csv" for start_time in CPS_DICT_START_TIME_LIST]
+# Define the file paths for the CPS data and dictionary
+CPS_DICT_TXT_LIST = [RAW_CPS_DICT_DIR / f"cps_dict_{start_time}.txt" for start_time in CPS_DICT_START_TIME_LIST]
+CPS_DICT_CSV_LIST = [PARSED_DICT_DIR / f"cps_dict_{start_time}.csv" for start_time in CPS_DICT_START_TIME_LIST]
 
-MANUAL_PARSED_DICT_FILE_LIST = [
+# Define the file paths for the parsed CPS data
+MANUAL_CLEAN_DICT_CSV_LIST = [
     PARSED_DICT_DIR / "cps_dict_199509.csv",
     PARSED_DICT_DIR / "cps_dict_199506.csv",
     PARSED_DICT_DIR / "cps_dict_199404.csv",
     PARSED_DICT_DIR / "cps_dict_199401.csv"
 ]
+
