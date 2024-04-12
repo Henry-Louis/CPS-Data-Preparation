@@ -206,7 +206,7 @@ def csv_to_dct(csv_file_path: str, output_file_path: str, str_vars: List[str] = 
         
         file.write('}\n')
 
-def convert_all_csv_to_dct():
+def convert_all_csv_to_dct() -> None:
     """
     Convert all parsed dictionary files to .dct files.
     """
