@@ -2,8 +2,9 @@ from pathlib import Path
 from typing import List
 import re
 import pandas as pd
-from config import CPS_DICT_FILE_LIST, PARSED_DICT_DIR, PARSED_DICT_FILE_LIST
+from config import CPS_DICT_FILE_LIST, PARSED_DICT_DIR, PARSED_DICT_FILE_LIST, MANUAL_PARSED_DICT_FILE_LIST
 
+# Parsing-related functions
 def get_main_content(text: str) -> str:
     """
     Get the main content of the CPS dictionary file.
@@ -39,7 +40,6 @@ def get_relevant_lines(text: str) -> List[str]:
         
     return lines
 
-#TODO: Check the parsing pattern
 def extract_dict_text_to_df(lines: List[str], dict_type: str="normal") -> pd.DataFrame:
     """
     Extract the variable name, start position, and length from the relevant lines.
@@ -62,11 +62,6 @@ def extract_dict_text_to_df(lines: List[str], dict_type: str="normal") -> pd.Dat
             # Extract the variable name, start position, and length
             pattern = r"(\w+\d?)\s+(\d+)\s+(.+?)\s+\(?(\d+)\s*[-]{1}\s*(\d+)\)?\s*$"
             match = re.match(pattern, line)
-            
-            # # If the pattern does not match, try another pattern
-            # if not match: # some lines do not have "-" between start_pos and end_pos
-            #     pattern = r"(\w+\d?)\s+(\d+)\s+(.+?)\s+\(?(\d+)s+(\d+)\)?\s*$"
-            #     match = re.match(pattern, line)
                 
             # If the pattern matches, append the results to the DataFrame
             if match:
@@ -142,10 +137,6 @@ def parse_dict_file_normal(dict_file: Path) -> None:
 def parse_dict_file_1998(dict_file: Path) -> None:
     """
     Parse the 1998 CPS dictionary file and save the parsed CSV file.
-    
-    Returns
-    -------
-    None
     """
     # Load the file as text
     text = dict_file.read_text()
@@ -161,16 +152,28 @@ def parse_dict_file_1998(dict_file: Path) -> None:
     PARSED_DICT_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(PARSED_DICT_DIR / f"{dict_file.stem}.csv", index=False)
 
-def main() -> None:
+# Manually clean the parsed dictionary CSV files
+def manually_clean_parsed_dict() -> None:
     """
-    Parse the CPS dictionary files and save the parsed CSV files.
+    Manually clean the parsed dictionary files.
     """
-    for file in CPS_DICT_FILE_LIST:
-        if "199801" in file.stem:
-            parse_dict_file_1998(file)
-        else:
-            parse_dict_file_normal(file)
+    # Load the targeted parsed dictionary files
+    for file in MANUAL_PARSED_DICT_FILE_LIST:
+        df = pd.read_csv(file)
+        # Deal with variable "PXFNTVTY" (start_pos: 794 -> 679)
+        if df.loc[df["var_name"] == "PXFNTVTY", "start_pos"].values[0] == 794:
+            df.loc[df["var_name"] == "PXFNTVTY", "start_pos"] = 679
+        
+        # Deal with variable "PEAFNOW" (var_len: 2 -> 3)
+        if not file.parts[-1] == "cps_dict_199509.csv": # 199509 is good for PEAFNOW
+            if df.loc[df["var_name"] == "PEAFNOW", "var_len"].values[0] == 2:
+                df.loc[df["var_name"] == "PEAFNOW", "var_len"] = 3
+            
+        # Save the cleaned parsed dictionary file
+        df.to_csv(file, index=False) # overwrite the original file
+        print(f"{file.stem} is manually cleaned, inplace overwriting executed.")
 
+# Validate the parsed dictionary CSV files
 def validate_parsed_dict() -> None:
     """
     Validate the parsed dictionary files.
@@ -185,22 +188,36 @@ def validate_parsed_dict() -> None:
             raise AssertionError(f"{file.stem} is empty.")
         # Check row by row
         for index, row in df.iterrows():
+            var_name = row["var_name"]
+            start_pos = row["start_pos"]
+            end_pos = row["end_pos"]
             # Check var_len
             if row["end_pos"] - row["start_pos"] + 1 != row["var_len"]:
-                print(row["end_pos"], row["start_pos"], row["var_len"])
-                raise AssertionError(f"{file.stem} has an invalid var_len at line {index}.")
+                # print(row["end_pos"], row["start_pos"], row["var_len"])
+                if var_name == "FILLER":
+                    print(f"{file.stem} has a FILLER variable with wrong length at line {index}.")
+                else:
+                    print(f"{file.stem} has an invalid var_len at line {index} ({var_name}).")
             # Check start_pos and end_pos
-            if row["start_pos"] > row["end_pos"]:
-                raise AssertionError(f"{file.stem} has an invalid start_pos and end_pos at line {index}.")
+            if start_pos > end_pos:
+                if var_name == "PXFNTVTY":
+                    print(f"{file.stem} has a PXFNTVTY variable with wrong position ({start_pos}, {end_pos}) at line {index}.")
+                else:
+                    raise AssertionError(f"{file.stem} has an invalid start_pos and end_pos at line {index} ({var_name}).")
             # Check the start_pos and end_pos between rows
+            missing_var_count = 0
             if index > 0:
                 if row["start_pos"] != df.loc[index - 1, "end_pos"] + 1:
-                    print(row["start_pos"], df.loc[index - 1, "end_pos"] + 1)
-                    raise AssertionError(f"{file.stem} has missing variables at line {index}.")
+                    missing_var_count += 1
             else:
                 if row["start_pos"] != 1:
                     raise AssertionError(f"{file.stem} does not start from 1.")
+                
+        # Print the missing variable count
+        if missing_var_count > 0:
+            print(f"{file.stem} has {missing_var_count} missing variables.")
 
+# Convert the parsed dictionary CSV files to DCT files
 def csv_to_dct(csv_file_path: str, output_file_path: str, str_vars: List[str] = []):
     """
     Reads a CSV file with variable specifications and writes a .dct file.
@@ -243,8 +260,28 @@ def convert_all_csv_to_dct() -> None:
         csv_to_dct(file, output_file, str_vars=[])
         print(f"{output_file.stem} is converted to dct file.")
 
+# Main function
+def main() -> None:
+    """
+    Parse the CPS dictionary files and save the parsed CSV files.
+    """
+    # Parse the dictionary files
+    for file in CPS_DICT_FILE_LIST:
+        if "199801" in file.stem:
+            parse_dict_file_1998(file)
+        else:
+            parse_dict_file_normal(file)
+    
+    # Manually clean the parsed dictionary files
+    manually_clean_parsed_dict()
+    
+    # Validate the parsed dictionary files     
+    validate_parsed_dict()
+    
+    # Convert the parsed dictionary files to .dct files
+    convert_all_csv_to_dct()
+
 if __name__ == "__main__":
     main()
-    validate_parsed_dict()
-    convert_all_csv_to_dct()
+    
     

@@ -52,3 +52,10 @@ CPS_DICT_START_TIME_LIST = [
 
 CPS_DICT_FILE_LIST = [CPS_DICT_DIR / f"cps_dict_{start_time}.txt" for start_time in CPS_DICT_START_TIME_LIST]
 PARSED_DICT_FILE_LIST = [PARSED_DICT_DIR / f"cps_dict_{start_time}.csv" for start_time in CPS_DICT_START_TIME_LIST]
+
+MANUAL_PARSED_DICT_FILE_LIST = [
+    PARSED_DICT_DIR / "cps_dict_199509.csv",
+    PARSED_DICT_DIR / "cps_dict_199506.csv",
+    PARSED_DICT_DIR / "cps_dict_199404.csv",
+    PARSED_DICT_DIR / "cps_dict_199401.csv"
+]
