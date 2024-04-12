@@ -122,7 +122,7 @@ def main() -> None:
     months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
     download_cps_data(years, months, CPS_DATA_DIR / "gz")
     extract_gz_files(CPS_DATA_DIR / "gz", CPS_DATA_DIR / "unparsed")
-    
+
 if __name__ == "__main__":
     main()
     

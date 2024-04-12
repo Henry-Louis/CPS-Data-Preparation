@@ -34,11 +34,12 @@ def get_relevant_lines(text: str) -> List[str]:
         A list of relevant lines.
     """
     # line starts with at least 2 capital letters
-    line_pattern = r"^[A-Z]{2,}.* \(?\d+ *-? ?\d+\)? *$"
+    line_pattern = r"^[A-Z]{2,}.*\(?\d+ *-? ?\d+\)?\s*$"
     lines = [line for line in text.split("\n") if re.match(line_pattern, line)]
         
     return lines
 
+#TODO: Check the parsing pattern
 def extract_dict_text_to_df(lines: List[str], dict_type: str="normal") -> pd.DataFrame:
     """
     Extract the variable name, start position, and length from the relevant lines.
@@ -55,10 +56,19 @@ def extract_dict_text_to_df(lines: List[str], dict_type: str="normal") -> pd.Dat
     df = pd.DataFrame(columns=["var_name", "var_len", "desc", "start_pos", "end_pos"])
     
     # Extract var_name, var_len, desc, start_pos, and end_pos
-    if dict_type == "normal":
+    if dict_type == "normal": # normal CPS dictionary
+        # Loop through the lines
         for line in lines:
-            pattern = r"(\w+\d?)\s+(\d+)\s+(.+?)\s+\(?(\d+)\s*-\s*(\d+)\)?\s*$"
+            # Extract the variable name, start position, and length
+            pattern = r"(\w+\d?)\s+(\d+)\s+(.+?)\s+\(?(\d+)\s*[-]{1}\s*(\d+)\)?\s*$"
             match = re.match(pattern, line)
+            
+            # # If the pattern does not match, try another pattern
+            # if not match: # some lines do not have "-" between start_pos and end_pos
+            #     pattern = r"(\w+\d?)\s+(\d+)\s+(.+?)\s+\(?(\d+)s+(\d+)\)?\s*$"
+            #     match = re.match(pattern, line)
+                
+            # If the pattern matches, append the results to the DataFrame
             if match:
                 var_name, var_len, desc, start_pos, end_pos = match.groups()
                 df = df._append({
@@ -68,13 +78,19 @@ def extract_dict_text_to_df(lines: List[str], dict_type: str="normal") -> pd.Dat
                     "start_pos": int(start_pos),
                     "end_pos": int(end_pos)
                 }, ignore_index=True)
+                
+            # If the pattern does not match, print a warning
             else:
                 Warning(f"Pattern not matched: {line}")
-    elif dict_type == "1998":
+                
+    elif dict_type == "1998": # 1998 CPS dictionary
+        # Loop through the lines
         for line in lines:
-            # D HETELAVL    2     35
+            # Extract the variable name, start position, and length
             pattern = r"D\s+(\w+\d?)\s+(\d+)\s+(\d+)"
             match = re.match(pattern, line)
+            
+            # If the pattern matches, append the results to the DataFrame
             if match:
                 var_name, var_len, start_pos = match.groups()
                 df = df._append({
@@ -84,6 +100,8 @@ def extract_dict_text_to_df(lines: List[str], dict_type: str="normal") -> pd.Dat
                     "start_pos": int(start_pos),
                     "end_pos": int(start_pos) + int(var_len) - 1
                 }, ignore_index=True)
+            
+            # If the pattern does not match, print a warning
             else:
                 Warning(f"Pattern not matched: {line}")
     else:
@@ -163,15 +181,25 @@ def validate_parsed_dict() -> None:
             Warning(f"{file.stem} does not exist.")
             continue
         df = pd.read_csv(file)
-        assert(df.shape[0] > 0, f"{file.stem} is empty.")
-        assert(df["var_len"].sum() == 0, f"{file.stem} has empty variable.")
-        for i, row in df.iterrows():
-            if i != 0: # Check for if all variables are next to each other
-                assert(row["start_pos"] == df.loc[i-1, "end_pos"] + 1, f"{file.stem} has overlapping variables.")
+        if df.shape[0] == 0:
+            raise AssertionError(f"{file.stem} is empty.")
+        # Check row by row
+        for index, row in df.iterrows():
+            # Check var_len
+            if row["end_pos"] - row["start_pos"] + 1 != row["var_len"]:
+                print(row["end_pos"], row["start_pos"], row["var_len"])
+                raise AssertionError(f"{file.stem} has an invalid var_len at line {index}.")
+            # Check start_pos and end_pos
+            if row["start_pos"] > row["end_pos"]:
+                raise AssertionError(f"{file.stem} has an invalid start_pos and end_pos at line {index}.")
+            # Check the start_pos and end_pos between rows
+            if index > 0:
+                if row["start_pos"] != df.loc[index - 1, "end_pos"] + 1:
+                    print(row["start_pos"], df.loc[index - 1, "end_pos"] + 1)
+                    raise AssertionError(f"{file.stem} has missing variables at line {index}.")
             else:
-                assert(row["start_pos"] == 1, f"{file.stem} does not start from 1.")
-        
-        print(f"{file.stem} is validated.")
+                if row["start_pos"] != 1:
+                    raise AssertionError(f"{file.stem} does not start from 1.")
 
 def csv_to_dct(csv_file_path: str, output_file_path: str, str_vars: List[str] = []):
     """
