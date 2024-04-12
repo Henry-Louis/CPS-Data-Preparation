@@ -275,7 +275,9 @@ def convert_all_csv_to_dct() -> None:
 # Main function
 def main() -> None:
     """
-    Parse the CPS dictionary files and save the parsed CSV files.
+    Parse the CPS dictionary files and save the parsed CSV files,
+    manually clean the parsed dictionary files, validate the parsed dictionary files,
+    and convert the parsed dictionary files to .dct files.
     """
     # Parse the dictionary files
     for file in CPS_DICT_TXT_LIST:
