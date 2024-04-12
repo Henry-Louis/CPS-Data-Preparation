@@ -1,11 +1,11 @@
-from config import CPS_DATA_UNPARSED_DIR
+from config import CPS_DATA_FW_DIR
 
 def subset_cps_datasets():
     """
     Subset the CPS datasets.
     """
     # Load the unparsed CPS datasets
-    cps_data_unparsed_files = [file for file in CPS_DATA_UNPARSED_DIR.glob("*") if "subsets" not in file.parts]
+    cps_data_unparsed_files = [file for file in CPS_DATA_FW_DIR.glob("*") if "subsets" not in file.parts]
     for file in cps_data_unparsed_files:
         # Load the first 5 lines and save with a new name (via line method)
         with open(file, "r") as f:

@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import List
 import re
 import pandas as pd
-from config import CPS_DICT_TXT_LIST, CPS_DICT_CSV_LIST, MANUAL_CLEAN_DICT_CSV_LIST, PARSED_DICT_DIR
+from config import (CPS_DICT_TXT_LIST, CPS_DICT_CSV_LIST, CPS_DICT_DCT_DIR, 
+                    MANUAL_CLEAN_CPS_DICT_CSV_LIST, CPS_DICT_CSV_DIR)
 
 # Parsing-related functions
 def get_main_content(text: str) -> str:
@@ -131,8 +132,8 @@ def parse_dict_file_normal(dict_file: Path) -> None:
     df = extract_dict_text_to_df(filtered_lines)
 
     # Save the parsed dictionary file
-    PARSED_DICT_DIR.mkdir(parents=True, exist_ok=True)
-    df.to_csv(PARSED_DICT_DIR / f"{dict_file.stem}.csv", index=False)
+    CPS_DICT_CSV_DIR.mkdir(parents=True, exist_ok=True)
+    df.to_csv(CPS_DICT_CSV_DIR / f"{dict_file.stem}.csv", index=False)
 
 def parse_dict_file_1998(dict_file: Path) -> None:
     """
@@ -149,8 +150,8 @@ def parse_dict_file_1998(dict_file: Path) -> None:
     df = extract_dict_text_to_df(filtered_lines, dict_type="1998")
     
     # Save the parsed dictionary file
-    PARSED_DICT_DIR.mkdir(parents=True, exist_ok=True)
-    df.to_csv(PARSED_DICT_DIR / f"{dict_file.stem}.csv", index=False)
+    CPS_DICT_CSV_DIR.mkdir(parents=True, exist_ok=True)
+    df.to_csv(CPS_DICT_CSV_DIR / f"{dict_file.stem}.csv", index=False)
 
 # Manually clean the parsed dictionary CSV files
 def manually_clean_parsed_dict() -> None:
@@ -158,7 +159,7 @@ def manually_clean_parsed_dict() -> None:
     Manually clean the parsed dictionary files.
     """
     # Load the targeted parsed dictionary files
-    for file in MANUAL_CLEAN_DICT_CSV_LIST:
+    for file in MANUAL_CLEAN_CPS_DICT_CSV_LIST:
         df = pd.read_csv(file)
         # Deal with variable "PXFNTVTY" (start_pos: 794 -> 679)
         if df.loc[df["var_name"] == "PXFNTVTY", "start_pos"].values[0] == 794:
@@ -265,8 +266,9 @@ def convert_all_csv_to_dct() -> None:
     """
     Convert all parsed dictionary files to .dct files.
     """
+    CPS_DICT_DCT_DIR.mkdir(parents=True, exist_ok=True)
     for file in CPS_DICT_CSV_LIST:
-        output_file = file.with_suffix(".dct")
+        output_file = CPS_DICT_DCT_DIR / f"{file.stem}.dct"
         csv_to_dct(file, output_file, str_vars=[])
         print(f"{output_file.stem} is converted to dct file.")
     
