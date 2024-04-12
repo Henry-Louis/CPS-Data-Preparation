@@ -82,7 +82,7 @@ def extract_dict_text_to_df(lines: List[str], dict_type: str="normal") -> pd.Dat
                     "var_len": int(var_len),
                     "desc": "",
                     "start_pos": int(start_pos),
-                    "end_pos": None
+                    "end_pos": int(start_pos) + int(var_len) - 1
                 }, ignore_index=True)
             else:
                 Warning(f"Pattern not matched: {line}")
@@ -168,9 +168,55 @@ def validate_parsed_dict() -> None:
         for i, row in df.iterrows():
             if i != 0: # Check for if all variables are next to each other
                 assert(row["start_pos"] == df.loc[i-1, "end_pos"] + 1, f"{file.stem} has overlapping variables.")
+            else:
+                assert(row["start_pos"] == 1, f"{file.stem} does not start from 1.")
         
         print(f"{file.stem} is validated.")
+
+def csv_to_dct(csv_file_path: str, output_file_path: str, str_vars: List[str] = []):
+    """
+    Reads a CSV file with variable specifications and writes a .dct file.
+    
+    Parameters:
+        csv_file_path (str): Path to the CSV file containing the variable definitions.
+        output_file_path (str): Path where the .dct file will be saved.
+        str_vars (List[str]): List of variable names that should be treated as strings.
+    """
+    # Read the CSV file into a DataFrame
+    df = pd.read_csv(csv_file_path)
+    
+    # Open the output .dct file and begin writing
+    with open(output_file_path, 'w') as file:
+        file.write('infix dictionary {\n')
+        
+        # Iterate over rows in DataFrame
+        for index, row in df.iterrows():
+            var_name = row['var_name']
+            var_len = row['var_len']
+            start_pos = row['start_pos']
+            end_pos = row['end_pos']
+            
+            # Determine if the variable should be treated as a string
+            if var_name in str_vars:
+                text = f'    str {var_name} {start_pos}-{end_pos}\n'
+            else:
+                text = f'    {var_name} {start_pos}-{end_pos}\n'
+            
+            file.write(text)
+        
+        file.write('}\n')
+
+def convert_all_csv_to_dct():
+    """
+    Convert all parsed dictionary files to .dct files.
+    """
+    for file in PARSED_DICT_FILE_LIST:
+        output_file = file.with_suffix(".dct")
+        csv_to_dct(file, output_file, str_vars=[])
+        print(f"{output_file.stem} is converted to dct file.")
 
 if __name__ == "__main__":
     main()
     validate_parsed_dict()
+    convert_all_csv_to_dct()
+    
