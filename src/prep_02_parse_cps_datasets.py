@@ -125,7 +125,9 @@ def validate_parsed_csv_files(csv_dir: Path) -> None:
         
     notes = "Notice: \nHULENSEC sometimes contain invalid values, but they will be replaced with NaN in the upcoming step."
     notes += "\nGEMSAST sometimes contain '-' entry, but it will be replaced with NaN in the upcoming step."
+    notes += "\nHRSERSUF sometimes contain '-' entry, but it will be replaced with NaN in the upcoming step."
+    print(notes)
         
 if __name__ == "__main__":
-    # parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
+    parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
     validate_parsed_csv_files(CPS_DATA_CSV_DIR)

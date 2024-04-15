@@ -12,6 +12,9 @@ CPS_DATA_GZ_DIR = RAW_CPS_DATA_DIR / "gz"
 CPS_DATA_FW_DIR = RAW_CPS_DATA_DIR / "fixedwidth"
 CPS_DATA_CSV_DIR = RAW_CPS_DATA_DIR / "csv"
 
+PROCESSED_CPS_DATA_DIR = PROCESSED_DIR / "cps_data"
+CPS_DATA_CLEANED_DIR = PROCESSED_CPS_DATA_DIR / "cleaned"
+
 # Define the directories for the CPS dictionary
 RAW_CPS_DICT_DIR = RAW_DIR / "cps_dict"
 CPS_DICT_TXT_DIR = RAW_CPS_DICT_DIR / "txt"
