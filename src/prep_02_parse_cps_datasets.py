@@ -21,6 +21,7 @@ def convert_fixed_width_data_to_csv(data_fx_file: Path, dict_csv_file: Path, out
     
     # Extract the var_name, start_pos, and end_pos columns
     dict_df = dict_df[["var_name", "start_pos", "end_pos"]]
+    dict_df = dict_df.sort_values("start_pos")
     
     # Load the fixed-width data file
     data_df = pd.read_fwf(data_fx_file, colspecs=dict_df[["start_pos", "end_pos"]].values.tolist(), header=None)
@@ -73,6 +74,7 @@ def parse_cps_data_files(data_dir: Path, dict_csv_files: List[Path], output_dir:
     
     # Find all the fixed-width data files
     data_files = list(data_dir.glob("*"))
+    data_files.sort()
     
     # Parse each data file
     for data_file in tqdm(data_files):
