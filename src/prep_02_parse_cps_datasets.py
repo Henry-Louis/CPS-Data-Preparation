@@ -19,7 +19,7 @@ def convert_fixed_width_data_to_csv(data_fx_file: Path, dict_csv_file: Path, out
     # Check the existency of the output data file
     output_file = output_dir / data_fx_file.with_suffix(".csv").name
     if output_file.exists():
-        print(f"The file {output_file} already exists, skipping...")
+        print(f"The file {output_file.stem} already exists, skipping...")
         return
     
     # Load the dictionary
@@ -77,8 +77,9 @@ def parse_cps_data_files(data_dir: Path, dict_csv_files: List[Path], output_dir:
     # Create the output directory if it does not exist
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Find all the fixed-width data files
+    # Find all the fixed-width data files (exclude "subset" files)
     data_files = list(data_dir.glob("*"))
+    data_files = [file for file in data_files if "subset" not in file.stem]
     data_files.sort()
     
     # Parse each data file
@@ -101,8 +102,8 @@ def validate_parsed_csv_files(csv_dir: Path) -> None:
         num_columns = len(df.columns)
         num_entries = len(df)
         str_columns = df.select_dtypes(include="object").columns
-        allowed_str_columns = ["FILLER.2", "HRSAMPLE", "HULENSEC", "GEMSAST"]
-        # FILLER.2 is not needed
+        allowed_str_columns = ["FILLER", "FILLER.2", "HRSAMPLE", "HULENSEC", "GEMSAST"]
+        # FILLER and FILLER.2 is not needed
         # HRSAMPLE is a string variable
         # HULENSEC sometimes contain invalid values (acceptable for now)
         unexpected_str_columns = [col for col in str_columns if col not in allowed_str_columns]
@@ -125,8 +126,6 @@ def validate_parsed_csv_files(csv_dir: Path) -> None:
     notes = "Notice: \nHULENSEC sometimes contain invalid values, but they will be replaced with NaN in the upcoming step."
     notes += "\nGEMSAST sometimes contain '-' entry, but it will be replaced with NaN in the upcoming step."
         
-        
-        
 if __name__ == "__main__":
-    parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
+    # parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
     validate_parsed_csv_files(CPS_DATA_CSV_DIR)
