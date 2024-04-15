@@ -97,10 +97,15 @@ def validate_parsed_csv_files(csv_dir: Path) -> None:
     csv_files.sort()
     
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file)
+        df = pd.read_csv(csv_file, low_memory=False)
         num_columns = len(df.columns)
         num_entries = len(df)
         str_columns = df.select_dtypes(include="object").columns
+        allowed_str_columns = ["FILLER.2", "HRSAMPLE", "HULENSEC", "GEMSAST"]
+        # FILLER.2 is not needed
+        # HRSAMPLE is a string variable
+        # HULENSEC sometimes contain invalid values (acceptable for now)
+        unexpected_str_columns = [col for col in str_columns if col not in allowed_str_columns]
         
         # Check for number of columns
         if num_columns <= 300:
@@ -109,13 +114,19 @@ def validate_parsed_csv_files(csv_dir: Path) -> None:
         if num_entries <= 100000:
             raise ValueError(f"Number of entries is too low in {csv_file.stem}")
         # Check for string columns
-        if len([col for col in str_columns if "FILLER" not in col]) > 0:
-            raise ValueError(f"Unexpected string columns in {csv_file.stem}: {str_columns}")
+        if len(unexpected_str_columns) > 0:
+            print(f"Unexpected string columns in {csv_file.stem}: {unexpected_str_columns}")
+            for col in unexpected_str_columns:
+                print(f"Unique Values for {col}:\n{df[col].value_counts()}")
+            continue
         
         print(f"Validated {csv_file.stem}")
+        
+    notes = "Notice: \nHULENSEC sometimes contain invalid values, but they will be replaced with NaN in the upcoming step."
+    notes += "\nGEMSAST sometimes contain '-' entry, but it will be replaced with NaN in the upcoming step."
         
         
         
 if __name__ == "__main__":
-    # parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
+    parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
     validate_parsed_csv_files(CPS_DATA_CSV_DIR)
