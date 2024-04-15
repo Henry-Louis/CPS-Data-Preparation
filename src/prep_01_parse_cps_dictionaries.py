@@ -197,7 +197,7 @@ def validate_parsed_dict() -> None:
             # Check var_len
             if row["end_pos"] - row["start_pos"] + 1 != row["var_len"]:
                 # print(row["end_pos"], row["start_pos"], row["var_len"])
-                if var_name == "FILLER":
+                if "FILLER" in var_name:
                     pass
                 else:
                     print(f"{file.stem} has an invalid var_len at line {index} ({var_name}).")
@@ -211,7 +211,7 @@ def validate_parsed_dict() -> None:
             missing_var_list = []
             if index > 0:
                 if row["start_pos"] != df.loc[index - 1, "end_pos"] + 1:
-                    if var_name == "FILLER":
+                    if "FILLER" in var_name:
                         pass
                     else:
                         missing_var_list.append(var_name)
