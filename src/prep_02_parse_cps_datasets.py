@@ -28,12 +28,18 @@ def convert_fixed_width_data_to_csv(data_fx_file: Path, dict_csv_file: Path, out
     # Extract the var_name, start_pos, and end_pos columns
     dict_df = dict_df[["var_name", "start_pos", "end_pos"]]
     dict_df = dict_df.sort_values("start_pos")
+    colspecs = [(row["start_pos"] - 1, row["end_pos"]) for _, row in dict_df.iterrows()]
     
     # Load the fixed-width data file
-    data_df = pd.read_fwf(data_fx_file, colspecs=dict_df[["start_pos", "end_pos"]].values.tolist(), header=None)
+    data_df = pd.read_fwf(data_fx_file, colspecs=colspecs, header=None)
     
     # Assign the column names
     data_df.columns = dict_df["var_name"]
+    needed_columns = [col for col in data_df.columns.to_list() if col not in ["FILLER", "FILLER.2"]]
+    data_df = data_df[needed_columns]
+    
+    # Clean the data
+    data_df["PTAGE"] = data_df["PTAGE"].replace("-", pd.NA).astype("Int64")
     
     # Save the data as a CSV file
     data_df.to_csv(output_file, index=False)
@@ -76,7 +82,7 @@ def validate_founded_dict_files(data_files: List[Path], dict_csv_files: List[Pat
     data_files.sort()
     for data_file in data_files:
         dict_csv_file = find_corresponding_dict_file(data_file, dict_csv_files)
-        print(f"Variables in {data_file.stem}: {dict_csv_file.stem}")
+        print(f"Matched variable dictionary for {data_file.stem}: {dict_csv_file.stem}")
 
 def parse_cps_data_files(data_dir: Path, dict_csv_files: List[Path], output_dir: Path) -> None:
     """
@@ -114,14 +120,11 @@ def validate_parsed_csv_files(csv_dir: Path) -> None:
     csv_files.sort()
     
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file, low_memory=False)
+        allowed_str_columns = ["HRSAMPLE", "HRSERSUF"]
+        df = pd.read_csv(csv_file, dtype={var : str for var in allowed_str_columns})
         num_columns = len(df.columns)
         num_entries = len(df)
         str_columns = df.select_dtypes(include="object").columns
-        allowed_str_columns = ["FILLER", "FILLER.2", "HRSAMPLE", "HULENSEC", "GEMSAST"]
-        # FILLER and FILLER.2 is not needed
-        # HRSAMPLE is a string variable
-        # HULENSEC sometimes contain invalid values (acceptable for now)
         unexpected_str_columns = [col for col in str_columns if col not in allowed_str_columns]
         
         # Check for number of columns
@@ -138,12 +141,8 @@ def validate_parsed_csv_files(csv_dir: Path) -> None:
             continue
         
         print(f"Validated {csv_file.stem}")
-        
-    notes = "Notice: \nHULENSEC sometimes contain invalid values, but they will be replaced with NaN in the upcoming step."
-    notes += "\nGEMSAST sometimes contain '-' entry, but it will be replaced with NaN in the upcoming step."
-    notes += "\nHRSERSUF sometimes contain '-' entry, but it will be replaced with NaN in the upcoming step."
-    print(notes)
-        
+
+
 if __name__ == "__main__":
     # Validate the founded dictionary files for the data files
     data_files = [file for file in list(CPS_DATA_FW_DIR.glob("*")) if "subset" not in file.stem]
@@ -151,5 +150,6 @@ if __name__ == "__main__":
     validate_founded_dict_files(data_files, dict_csv_files)
     
     # Parse and validate the CPS data files
-    # parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
+    parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
     # validate_parsed_csv_files(CPS_DATA_CSV_DIR)
+    

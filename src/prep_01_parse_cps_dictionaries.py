@@ -165,10 +165,10 @@ def manually_clean_parsed_dict() -> None:
         if df.loc[df["var_name"] == "PXFNTVTY", "start_pos"].values[0] == 794:
             df.loc[df["var_name"] == "PXFNTVTY", "start_pos"] = 679
         
-        # Deal with variable "PEAFNOW" (var_len: 2 -> 3)
-        if not file.parts[-1] == "cps_dict_199509.csv": # 199509 is good for PEAFNOW
-            if df.loc[df["var_name"] == "PEAFNOW", "var_len"].values[0] == 2:
-                df.loc[df["var_name"] == "PEAFNOW", "var_len"] = 3
+        # Deal with variable "PEAFNOW" (start_pos: 134 -> 135)
+        if file.stem in ["cps_dict_199401", "cps_dict_199404", "cps_dict_199506"]:
+            if df.loc[df["var_name"] == "PEAFNOW", "start_pos"].values[0] == 134:
+                df.loc[df["var_name"] == "PEAFNOW", "start_pos"] = 135
             
         # Save the cleaned parsed dictionary file
         df.to_csv(file, index=False) # overwrite the original file
@@ -189,29 +189,30 @@ def validate_parsed_dict() -> None:
         df = pd.read_csv(file)
         if df.shape[0] == 0:
             raise AssertionError(f"{file.stem} is empty.")
+        
         # Check row by row
         for index, row in df.iterrows():
             var_name = row["var_name"]
             start_pos = row["start_pos"]
             end_pos = row["end_pos"]
-            # Check var_len
+            # 1. Check var_len
             if row["end_pos"] - row["start_pos"] + 1 != row["var_len"]:
                 # print(row["end_pos"], row["start_pos"], row["var_len"])
-                if "FILLER" in var_name:
+                if var_name == "FILLER" or var_name == "FILLER.2":
                     pass
                 else:
                     print(f"{file.stem} has an invalid var_len at line {index} ({var_name}).")
-            # Check start_pos and end_pos
+            # 2. Check start_pos and end_pos within a row
             if start_pos > end_pos:
                 if var_name == "PXFNTVTY":
                     print(f"{file.stem} has a PXFNTVTY variable with wrong position ({start_pos}, {end_pos}) at line {index}.")
                 else:
                     raise AssertionError(f"{file.stem} has an invalid start_pos and end_pos at line {index} ({var_name}).")
-            # Check the start_pos and end_pos between rows
+            # 3. Check the start_pos and end_pos between rows
             missing_var_list = []
             if index > 0:
                 if row["start_pos"] != df.loc[index - 1, "end_pos"] + 1:
-                    if "FILLER" in var_name:
+                    if var_name == "FILLER" or var_name == "FILLER.2":
                         pass
                     else:
                         missing_var_list.append(var_name)

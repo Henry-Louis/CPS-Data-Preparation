@@ -14,42 +14,25 @@ def clean_str_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: The cleaned DataFrame.
     """
-    # Drop FILLER columns
-    data_df = data_df.drop(columns=[col for col in data_df.columns if "FILLER" in col])
-    
-    # Replace invalid values with NaN
-    data_df["HULENSEC"] = pd.to_numeric(data_df["HULENSEC"], errors="coerce")
-    data_df["GEMSAST"] = data_df["GEMSAST"].replace("-", "NaN")
-    data_df["HRSERSUF"] = data_df["HRSERSUF"].replace("-", "NaN")
+    # Replace the "-" with NA in PTAGE variable
+    data_df["PTAGE"] = data_df["PTAGE"].replace("-", pd.NA).astype("Int64")
     
     return data_df
 
-def get_str_columns(cleaned_df: pd.DataFrame) -> List[str]:
-    """
-    Get the string variables in a DataFrame.
-    
-    Parameters:
-        cleaned_df (pd.DataFrame): The cleaned DataFrame.
-        
-    Returns:
-        List[str]: The string variables in the DataFrame.
-    """
-    str_variables = cleaned_df.select_dtypes(include="object").columns.tolist()
-    return str_variables
-
-def validate_str_columns(cleaned_df: pd.DataFrame) -> bool:
+def validate_str_columns(cleaned_df: pd.DataFrame, allowed_str_vars: List[str]) -> List[str]:
     """
     Validate the string variables in a DataFrame.
     
     Parameters:
         cleaned_df (pd.DataFrame): The cleaned DataFrame.
+        allowed_str_vars (List[str]): A list of allowed string variables.
         
     Returns:
-        bool: True if the DataFrame has no string variables, False otherwise.
+        List[str]: A list of string variables that are not allowed.
     """
-    str_columns = get_str_columns(cleaned_df)
-    str_columns = [col for col in str_columns if col != "HRSAMPLE"]
-    return len(str_columns) == 0
+    str_columns = cleaned_df.select_dtypes(include="object").columns.to_list()
+    str_columns = [col for col in str_columns if col not in allowed_str_vars]
+    return str_columns
 
 def main() -> None:
     """
@@ -64,20 +47,24 @@ def main() -> None:
         # Set the output file
         output_file = CPS_DATA_CLEANED_DIR / data_file.name
         
+        # Define dtype
+        dtype = {"HRSAMPLE": str, "HRSERSUF": str}
+        
         # Check if the cleaned data exists
         if not output_file.exists():
-            data_df = pd.read_csv(data_file, dtype={"HRSAMPLE": str})
+            data_df = pd.read_csv(data_file, dtype=dtype)
             data_df = clean_str_variables(data_df)
             data_df.to_csv(output_file, index=False)
         else:
-            data_df = pd.read_csv(output_file, dtype={"HRSAMPLE": str})
-            if not validate_str_columns(data_df):
+            data_df = pd.read_csv(output_file, dtype=dtype)
+            str_columns = validate_str_columns(data_df, dtype.keys())
+            if str_columns:
                 data_df = clean_str_variables(data_df)
                 data_df.to_csv(output_file, index=False)
         
         # Validate the cleaned dataset
-        str_columns = [col for col in get_str_columns(data_df) if col != "HRSAMPLE"]
-        if not validate_str_columns(data_df):
+        str_columns = validate_str_columns(data_df, dtype.keys())
+        if str_columns:
             print(f"String columns found in {data_file}: {str_columns}")
         
     
