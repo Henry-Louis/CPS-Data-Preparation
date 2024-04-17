@@ -19,9 +19,9 @@ def clean_str_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     
     return data_df
 
-def validate_str_columns(cleaned_df: pd.DataFrame, allowed_str_vars: List[str]) -> List[str]:
+def get_invalid_str_columns(cleaned_df: pd.DataFrame, allowed_str_vars: List[str]) -> List[str]:
     """
-    Validate the string variables in a DataFrame.
+    Get the unexpected string variables in a DataFrame.
     
     Parameters:
         cleaned_df (pd.DataFrame): The cleaned DataFrame.
@@ -57,13 +57,13 @@ def main() -> None:
             data_df.to_csv(output_file, index=False)
         else:
             data_df = pd.read_csv(output_file, dtype=dtype)
-            str_columns = validate_str_columns(data_df, dtype.keys())
+            str_columns = get_invalid_str_columns(data_df, dtype.keys())
             if str_columns:
                 data_df = clean_str_variables(data_df)
                 data_df.to_csv(output_file, index=False)
         
         # Validate the cleaned dataset
-        str_columns = validate_str_columns(data_df, dtype.keys())
+        str_columns = get_invalid_str_columns(data_df, dtype.keys())
         if str_columns:
             print(f"String columns found in {data_file}: {str_columns}")
         
