@@ -45,8 +45,6 @@ CPS_DICT_URL_LIST = [
     "https://www2.census.gov/programs-surveys/cps/datasets/2003/basic/jan03dd.txt",
     "https://www2.census.gov/programs-surveys/cps/datasets/2002/basic/jan98dd.asc",
     
-    https://www2.census.gov/programs-surveys/cps/datasets/2002/basic/jan98dd.asc
-    
     "https://www2.census.gov/programs-surveys/cps/datasets/1997/basic/sep95_dec97_dd.txt",
     "https://www2.census.gov/programs-surveys/cps/datasets/1995/basic/jun95_aug95_dd.txt",
     "https://www2.census.gov/programs-surveys/cps/datasets/1995/basic/apr94_may95_dd.txt",
@@ -58,10 +56,6 @@ CPS_DICT_STARTTIME_LIST = [
     "201205", "201001", "200901", "200701", "200508", "200405", "200301", "199801",
     "199509", "199506", "199404", "199401"
 ]
-
-CPS_DATA_TO_DICT_MAP = {
-    "199401": "199401",
-}
 
 # Define the file paths for the CPS dictionary
 CPS_DICT_TXT_LIST = [CPS_DICT_TXT_DIR / f"cps_dict_{start_time}.txt" for start_time in CPS_DICT_STARTTIME_LIST]

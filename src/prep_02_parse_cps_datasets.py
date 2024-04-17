@@ -146,10 +146,10 @@ def validate_parsed_csv_files(csv_dir: Path) -> None:
         
 if __name__ == "__main__":
     # Validate the founded dictionary files for the data files
-    data_files = list(CPS_DATA_FW_DIR.glob("*"))
+    data_files = [file for file in list(CPS_DATA_FW_DIR.glob("*")) if "subset" not in file.stem]
     dict_csv_files = CPS_DICT_CSV_LIST
     validate_founded_dict_files(data_files, dict_csv_files)
     
     # Parse and validate the CPS data files
-    parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
-    validate_parsed_csv_files(CPS_DATA_CSV_DIR)
+    # parse_cps_data_files(CPS_DATA_FW_DIR, CPS_DICT_CSV_LIST, CPS_DATA_CSV_DIR)
+    # validate_parsed_csv_files(CPS_DATA_CSV_DIR)
