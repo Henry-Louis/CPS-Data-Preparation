@@ -6,9 +6,8 @@ from config import (
     CPS_DATA_CLEANED_DIR, CPS_DATA_CHILD_DIR,
     DATA_YEAR, BIRTH_YEAR, AGE,
     HOUSEHOLD_ID, RELATIONSHIP,
-    IS_PARENT, IS_CHILD, IS_OLDEST_CHILD,
-    AGE_OF_OLDEST_CHILD, 
-    MARRITAL_STATUS, IS_MARRIED, MARRIAGE_TIMES
+    HAS_CHILD, AGE_OF_OLDEST_CHILD, 
+    MARRITAL_STATUS, IS_MARRIED
 )
 
 
@@ -73,7 +72,7 @@ def get_family_groups(data_df: pd.DataFrame) -> List[pd.DataFrame]:
     family_groups = data_df.groupby(HOUSEHOLD_ID)
     return [group for _, group in family_groups]
 
-def add_family_based_variables_for_household(family_group: pd.DataFrame) -> pd.DataFrame:
+def add_child_related_variables_for_household(family_group: pd.DataFrame) -> pd.DataFrame:
     """
     Add family-based variables to a family group (IS_PARENT, IS_CHILD, IS_OLDEST_CHILD,
     AGE_OF_OLDEST_CHILD).
@@ -86,29 +85,21 @@ def add_family_based_variables_for_household(family_group: pd.DataFrame) -> pd.D
     """
     if family_group[HOUSEHOLD_ID].nunique() != 1:
         raise ValueError("The family group should contain only one household.")
+
+    # Calculate the number of children in the family
+    is_ref_or_spouse = family_group[RELATIONSHIP].isin([1, 2]) # Series of booleans
+    is_child = family_group[RELATIONSHIP] == 3 # Series of booleans
+    num_children_in_family = is_child.sum() # Scalar
+    has_child = (int(num_children_in_family > 0) * is_ref_or_spouse).astype(int) # Series of 0 or 1
+    age_of_oldest_child = family_group.loc[is_child, AGE].max() if num_children_in_family > 0 else -1 # Scalar
     
-    # TODO: CHECK THE ENTIRE LOGIC
-    # family_group = family_group.copy()
+    # Assign the family-based variables to the family group
+    family_group[HAS_CHILD] = has_child
+    family_group[AGE_OF_OLDEST_CHILD] = age_of_oldest_child
 
-    # # Initialize the variables
-    # family_group[IS_PARENT] = 0
+    return family_group[is_ref_or_spouse]
 
-    # # Check if there are any parents in the family group
-    # is_child = family_group[RELATIONSHIP] == 3
-
-    # # Set IS_PARENT, IS_CHILD, IS_OLDEST_CHILD, and AGE_OF_OLDEST_CHILD using boolean conditions
-    # family_group[IS_PARENT] = (is_child.any()) * (family_group[RELATIONSHIP].isin([1, 2])).astype(int)
-    # family_group[IS_CHILD] = (is_child).astype(int)
-    # family_group[IS_OLDEST_CHILD] = ((family_group[AGE] == family_group[AGE].max()) & is_child).astype(int)
-    # family_group[AGE_OF_OLDEST_CHILD] = -1 if is_child.any() else family_group[AGE].max()
-    
-    # # Keep only the reference person and the spouse
-    # family_group = family_group[family_group[RELATIONSHIP].isin([1, 2])]
-
-    # return family_group
-    
-
-def add_family_based_variables(data_df: pd.DataFrame) -> pd.DataFrame:
+def add_child_related_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add child-related variables to the CPS data.
     
@@ -122,27 +113,68 @@ def add_family_based_variables(data_df: pd.DataFrame) -> pd.DataFrame:
         raise ValueError("The DataFrame should contain multiple households.")
     
     family_groups = get_family_groups(data_df)
-    family_groups = [add_family_based_variables_for_household(family_group) for family_group in family_groups]
+    family_groups = [add_child_related_variables_for_household(family_group) for family_group in family_groups]
     data_df = pd.concat(family_groups)
     
     return data_df
 
-def add_variables_to_csv_file(data_file: Path) -> pd.DataFrame:
+def add_marriage_related_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Add child-related variables to the cleaned CPS data.
+    Add marriage-related variables to the CPS data.
     
     Parameters:
-        data_file (Path): The path to the cleaned CPS data.
+        data_df (pd.DataFrame): The CPS data.
+        
+    Returns:
+        pd.DataFrame: The CPS data with the marriage-related variables.
+    """
+    return data_df
+
+def add_variables(data_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add several sets of variables to the cleaned CPS data.
+    
+    Parameters:
+        data_df (pd.DataFrame): The cleaned CPS data.
         
     Returns:
         pd.DataFrame: The cleaned CPS data with the child-related variables.
     """
-    data_df = load_data(data_file)
     data_df = add_birth_year(data_df)
     data_df = add_is_married(data_df)
-    data_df = add_family_based_variables(data_df)
+    data_df = add_child_related_variables(data_df)
+    data_df = add_marriage_related_variables(data_df)
     
     return data_df
+
+def filter_data(data_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filter the DataFrame to keep only the relevant observations.
+    
+    Parameters:
+        data_df (pd.DataFrame): The DataFrame to filter.
+        
+    Returns:
+        pd.DataFrame: The filtered DataFrame.
+    """
+    age_cond = (data_df[AGE] >= 20) & (data_df[AGE] <= 55)
+    child_age_cond = (data_df[AGE_OF_OLDEST_CHILD] <= 18)
+    reasonable_age_cond = data_df[AGE] > (data_df[AGE_OF_OLDEST_CHILD] + 15)
+    married_or_never_cond = (data_df[IS_MARRIED] == 1) | (data_df[IS_MARRIED] == 0)
+    
+    return data_df[age_cond & child_age_cond & reasonable_age_cond & married_or_never_cond]
+
+def prepare_dataframe(data_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add variables and filter the DataFrame.
+    
+    Parameters:
+        data_df (pd.DataFrame): The DataFrame to prepare.
+        
+    Returns:
+        pd.DataFrame: The prepared DataFrame.
+    """    
+    return filter_data(add_variables(data_df))
 
 def main() -> None:
     # Create the directory for the child-related CPS data
@@ -154,9 +186,8 @@ def main() -> None:
     # Loop over all cleaned CPS data files
     for cleaned_data_file in tqdm(cleaned_data_files, desc="Adding child-related variables"):
         child_data_file = CPS_DATA_CHILD_DIR / cleaned_data_file.name
-        child_data_df = add_variables_to_csv_file(cleaned_data_file)
+        child_data_df = prepare_dataframe(load_data(cleaned_data_file))
         child_data_df.to_csv(child_data_file, index=False)
-        break
     
 if __name__ == "__main__":
     main()
