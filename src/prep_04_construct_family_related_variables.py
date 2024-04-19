@@ -2,15 +2,10 @@ from typing import List
 from pathlib import Path
 import pandas as pd
 from tqdm.auto import tqdm
-from config import (
-    CPS_DATA_CLEANED_DIR, CPS_DATA_CHILD_DIR,
-    DATA_YEAR, BIRTH_YEAR, AGE,
-    HOUSEHOLD_ID, RELATIONSHIP,
-    HAS_CHILD, AGE_OF_OLDEST_CHILD, 
-    MARRITAL_STATUS, IS_MARRIED
-)
+from config import CPS_DATA_CLEANED_DIR, CPS_DATA_CHILD_DIR
+from variable_typing import *
 
-
+# Data-loading function
 def load_data(data_file: Path) -> pd.DataFrame:
     """
     Load the cleaned CPS data, with DATA_YEAR added.
@@ -28,6 +23,7 @@ def load_data(data_file: Path) -> pd.DataFrame:
     
     return data_df
 
+# Variable-adding functions
 def add_birth_year(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add the birth year variable to the CPS data.
@@ -92,10 +88,12 @@ def add_child_related_variables_for_household(family_group: pd.DataFrame) -> pd.
     num_children_in_family = is_child.sum() # Scalar
     has_child = (int(num_children_in_family > 0) * is_ref_or_spouse).astype(int) # Series of 0 or 1
     age_of_oldest_child = family_group.loc[is_child, AGE].max() if num_children_in_family > 0 else -1 # Scalar
+    year_of_first_birth_giving = family_group[DATA_YEAR] - age_of_oldest_child if num_children_in_family > 0 else -1 # Series of years
     
     # Assign the family-based variables to the family group
     family_group[HAS_CHILD] = has_child
     family_group[AGE_OF_OLDEST_CHILD] = age_of_oldest_child
+    family_group[YEAR_OF_FIRST_BIRTH_GIVING] = year_of_first_birth_giving
 
     return family_group[is_ref_or_spouse]
 
@@ -130,6 +128,22 @@ def add_marriage_related_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     return data_df
 
+def add_cohort_id(df: pd.DataFrame, var_list: List[str]=MATCHING_VARS) -> pd.DataFrame:
+    """
+    Construct a demographic identifier (COHORT_ID) for each individual based on the specified variables.
+
+    Parameters:
+    - df: DataFrame containing the specified variables
+    - var_list: list of variable names to be used in constructing the demographic identifier
+
+    Returns:
+    - df: DataFrame with the demographic identifier added
+    """
+    # Construct the demographic identifier "COHORT_ID"
+    df["COHORT_ID"] = df[var_list].apply(lambda x: "_".join(x.astype(str)), axis=1)
+    return df
+
+# Container functions
 def add_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add several sets of variables to the cleaned CPS data.
@@ -144,6 +158,7 @@ def add_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     data_df = add_is_married(data_df)
     data_df = add_child_related_variables(data_df)
     data_df = add_marriage_related_variables(data_df)
+    data_df = add_cohort_id(data_df, var_list=MATCHING_VARS)
     
     return data_df
 
@@ -176,6 +191,7 @@ def prepare_dataframe(data_df: pd.DataFrame) -> pd.DataFrame:
     """    
     return filter_data(add_variables(data_df))
 
+# Main function
 def main() -> None:
     # Create the directory for the child-related CPS data
     CPS_DATA_CHILD_DIR.mkdir(parents=True, exist_ok=True)
@@ -188,6 +204,9 @@ def main() -> None:
         child_data_file = CPS_DATA_CHILD_DIR / cleaned_data_file.name
         child_data_df = prepare_dataframe(load_data(cleaned_data_file))
         child_data_df.to_csv(child_data_file, index=False)
+        break
+    
+    print("Child-related variables added to the CPS data.")
     
 if __name__ == "__main__":
     main()
