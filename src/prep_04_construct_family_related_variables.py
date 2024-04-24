@@ -140,7 +140,7 @@ def add_cohort_id(df: pd.DataFrame, var_list: List[str]=MATCHING_VARS) -> pd.Dat
     - df: DataFrame with the demographic identifier added
     """
     # Construct the demographic identifier "COHORT_ID"
-    df["COHORT_ID"] = df[var_list].apply(lambda x: "_".join(x.astype(str)), axis=1)
+    df[COHORT_ID] = df[var_list].apply(lambda x: "_".join(x.astype(str)), axis=1)
     return df
 
 # Container functions
@@ -198,13 +198,16 @@ def main() -> None:
     
     # Find all cleaned CPS data files
     cleaned_data_files = list(CPS_DATA_CLEANED_DIR.glob("*.csv"))
+    cleaned_data_files.sort()
     
     # Loop over all cleaned CPS data files
     for cleaned_data_file in tqdm(cleaned_data_files, desc="Adding child-related variables"):
         child_data_file = CPS_DATA_CHILD_DIR / cleaned_data_file.name
         child_data_df = prepare_dataframe(load_data(cleaned_data_file))
         child_data_df.to_csv(child_data_file, index=False)
-        break
+
+        if "199403" in cleaned_data_file.name:
+            break # for testing purposes
     
     print("Child-related variables added to the CPS data.")
     

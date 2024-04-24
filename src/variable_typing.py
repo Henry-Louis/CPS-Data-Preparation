@@ -1,5 +1,9 @@
 # Define variables in the datasets
 
+# Target variables
+TARGET_VAR1 = "HUFAMINC" # Family income
+TARGET_VAR2 = "PRHRUSL" # Usual working hours
+
 # ID variables
 HOUSEHOLD_ID = "HRHHID"
 PERSON_NUM = "HUHHNUM"
@@ -30,5 +34,16 @@ GENDER = "PESEX"
 EDUCATION = "PEEDUCA"
 STATE = "GESTCEN"
 
+COHORT_ID = "COHORT_ID"
+# PSEUDO_ID = "PSEUDO_ID"
+
 # Matching Variables
 MATCHING_VARS = [BIRTH_YEAR, RACE, GENDER, EDUCATION, STATE]
+
+# Variables needed for the analysis
+NEEDED_VARS = [COHORT_ID, DATA_YEAR, # Data year
+               BIRTH_YEAR, RACE, GENDER, EDUCATION, STATE, # Demographic variables
+               AGE, IS_MARRIED, MARRITAL_STATUS, # Marriage variables
+               HAS_CHILD, AGE_OF_OLDEST_CHILD, YEAR_OF_FIRST_BIRTH_GIVING, # Treatment variables
+               TARGET_VAR1, TARGET_VAR2] # Target variables
+               

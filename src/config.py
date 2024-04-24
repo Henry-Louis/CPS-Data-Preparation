@@ -17,6 +17,8 @@ CPS_DATA_CSV_DIR = RAW_CPS_DATA_DIR / "csv"
 PROCESSED_CPS_DATA_DIR = PROCESSED_DIR / "cps_data"
 CPS_DATA_CLEANED_DIR = PROCESSED_CPS_DATA_DIR / "cleaned"
 CPS_DATA_CHILD_DIR = PROCESSED_CPS_DATA_DIR / "child"
+CPS_DATA_MERGED_DIR = PROCESSED_CPS_DATA_DIR / "merged"
+CPS_DATA_PSEUDO_DIR = PROCESSED_CPS_DATA_DIR / "pseudo_panel"
 
 # Define the directories for the CPS dictionary
 RAW_CPS_DICT_DIR = RAW_DIR / "cps_dict"
@@ -72,3 +74,6 @@ MANUAL_CLEAN_CPS_DICT_CSV_LIST = [
     CPS_DICT_CSV_DIR / "cps_dict_199401.csv"
 ]
 
+# File paths for the data files
+CPS_DATA_MERGED_CSV = CPS_DATA_MERGED_DIR / "cps_data_merged.csv"
+CPS_DATA_PSEUDO_CSV = CPS_DATA_PSEUDO_DIR / "cps_data_pseudo_panel.csv"
