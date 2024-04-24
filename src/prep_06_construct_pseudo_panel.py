@@ -45,13 +45,14 @@ def make_potential_observations_for_non_parents(df: pd.DataFrame, treatment_timi
         non_parent_df_list.append(non_parent_df_copy)
         
     df = pd.concat([parent_df,] + non_parent_df_list)
+    df = df[NEEDED_VARS]
     
     return df
 
 def main() -> None:
     df = pd.read_csv(CPS_DATA_MERGED_CSV)
     df = drop_non_matched_observations(df, COHORT_ID, HAS_CHILD)
-    df = make_potential_observations_for_non_parents(df, COHORT_ID, AGE_OF_OLDEST_CHILD)
+    df = make_potential_observations_for_non_parents(df, AGE_OF_OLDEST_CHILD)
     
     # Save the dataset
     CPS_DATA_PSEUDO_CSV.parent.mkdir(parents=True, exist_ok=True)
