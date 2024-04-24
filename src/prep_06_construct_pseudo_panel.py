@@ -21,7 +21,7 @@ def drop_non_matched_observations(df: pd.DataFrame, cohort_id: str, treatment_va
     
     return df[df[cohort_id].isin(intersect_cohort_ids)]
 
-def make_potential_observations_for_non_parents(df: pd.DataFrame, cohort_id: str, treatment_timing: str) -> pd.DataFrame:
+def make_potential_observations_for_non_parents(df: pd.DataFrame, treatment_timing: str) -> pd.DataFrame:
     """
     Replicate the observations with AGE_OF_OLDEST_CHILD == -1 to [-1, -5] to make potential
     observations for non-parents. Essentially, we are assuming the non-parents could potentially
@@ -29,7 +29,6 @@ def make_potential_observations_for_non_parents(df: pd.DataFrame, cohort_id: str
     
     Parameters:
         df (pd.DataFrame): The dataset.
-        cohort_id (str): The cohort ID variable.
         treatment_timing (str): The treatment timing variable.
     
     Returns:
