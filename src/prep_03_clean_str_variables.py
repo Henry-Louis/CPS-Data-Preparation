@@ -66,7 +66,6 @@ def main() -> None:
         str_columns = get_invalid_str_columns(data_df, dtype.keys())
         if str_columns:
             print(f"String columns found in {data_file}: {str_columns}")
-        
-    
+
 if __name__ == "__main__":
     main()
