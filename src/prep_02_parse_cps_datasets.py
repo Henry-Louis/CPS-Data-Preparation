@@ -38,9 +38,6 @@ def convert_fixed_width_data_to_csv(data_fx_file: Path, dict_csv_file: Path, out
     needed_columns = [col for col in data_df.columns.to_list() if col not in ["FILLER", "FILLER.2"]]
     data_df = data_df[needed_columns]
     
-    # Clean the data
-    data_df["PTAGE"] = data_df["PTAGE"].replace("-", pd.NA).astype("Int64")
-    
     # Save the data as a CSV file
     data_df.to_csv(output_file, index=False)
 

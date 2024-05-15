@@ -143,11 +143,13 @@ def parse_dict_file_1998(dict_file: Path) -> None:
     text = dict_file.read_text()
     
     # Filter lines that match the pattern (lines start with "D ")
-    filtered_lines = [line for line in text.split("\n") if line.startswith("D ")]
-    print(f"In {dict_file.stem}, {len(filtered_lines)} variables are found.")
+    filtered_lines_d = [line for line in text.split("\n") if line.startswith("D ")]
+    filtered_lines_t = [line for line in text.split("\n") if line.startswith("T ")]
+    assert len(filtered_lines_d) == len(filtered_lines_t), f"Length of filtered_lines_d and filtered_lines_t are different in {dict_file.stem}."
     
     # Extract the variable name, start position, and length
-    df = extract_dict_text_to_df(filtered_lines, dict_type="1998")
+    df = extract_dict_text_to_df(filtered_lines_d, dict_type="1998")
+    df['desc'] = [line.replace("T ", "") for line in filtered_lines_t]
     
     # Save the parsed dictionary file
     CPS_DICT_CSV_DIR.mkdir(parents=True, exist_ok=True)

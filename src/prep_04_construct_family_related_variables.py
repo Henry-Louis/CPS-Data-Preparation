@@ -10,7 +10,7 @@ def load_data(data_file: Path) -> pd.DataFrame:
     """
     Load the cleaned CPS data, with DATA_YEAR added.
     
-    Parameters:
+    Args:
         data_file (Path): The path to the cleaned CPS data.
         
     Returns:
@@ -28,7 +28,7 @@ def add_birth_year(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add the birth year variable to the CPS data.
     
-    Parameters:
+    Args:
         data_df (pd.DataFrame): The CPS data.
         
     Returns:
@@ -42,7 +42,7 @@ def add_is_married(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add the IS_MARRIED variable to the CPS data.
     
-    Parameters:
+    Args:
         data_df (pd.DataFrame): The CPS data.
         
     Returns:
@@ -59,7 +59,7 @@ def get_family_groups(data_df: pd.DataFrame) -> List[pd.DataFrame]:
     """
     Group the entries in a DataFrame by family.
     
-    Parameters:
+    Args:
         data_df (pd.DataFrame): The DataFrame to group.
         
     Returns:
@@ -73,7 +73,7 @@ def add_child_related_variables_for_household(family_group: pd.DataFrame) -> pd.
     Add family-based variables to a family group (IS_PARENT, IS_CHILD, IS_OLDEST_CHILD,
     AGE_OF_OLDEST_CHILD).
     
-    Parameters:
+    Args:
         family_group (pd.DataFrame): The family group.
         
     Returns:
@@ -101,7 +101,7 @@ def add_child_related_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add child-related variables to the CPS data.
     
-    Parameters:
+    Args:
         data_df (pd.DataFrame): The CPS data.
         
     Returns:
@@ -120,7 +120,7 @@ def add_marriage_related_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add marriage-related variables to the CPS data.
     
-    Parameters:
+    Args:
         data_df (pd.DataFrame): The CPS data.
         
     Returns:
@@ -132,7 +132,7 @@ def add_cohort_id(df: pd.DataFrame, var_list: List[str]=MATCHING_VARS) -> pd.Dat
     """
     Construct a demographic identifier (COHORT_ID) for each individual based on the specified variables.
 
-    Parameters:
+    Args:
     - df: DataFrame containing the specified variables
     - var_list: list of variable names to be used in constructing the demographic identifier
 
@@ -148,7 +148,7 @@ def add_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add several sets of variables to the cleaned CPS data.
     
-    Parameters:
+    Args:
         data_df (pd.DataFrame): The cleaned CPS data.
         
     Returns:
@@ -166,7 +166,7 @@ def filter_data(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Filter the DataFrame to keep only the relevant observations.
     
-    Parameters:
+    Args:
         data_df (pd.DataFrame): The DataFrame to filter.
         
     Returns:
@@ -183,13 +183,28 @@ def prepare_dataframe(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     Add variables and filter the DataFrame.
     
-    Parameters:
+    Args:
         data_df (pd.DataFrame): The DataFrame to prepare.
         
     Returns:
         pd.DataFrame: The prepared DataFrame.
     """    
     return filter_data(add_variables(data_df))
+
+def update_age(child_data_df: pd.DataFrame) -> None:
+    """
+    Update the AGE variable to be consistent across years.
+    
+    Args:
+        child_data_df (pd.DataFrame): The child-related CPS data.
+    """
+    global AGE # AGE variable is not consistent across years
+    if "PEAGE" in child_data_df.columns:
+        AGE = "PEAGE"
+    elif "PTRAGE" in child_data_df.columns:
+        AGE = "PTRAGE"
+    else:
+        raise ValueError("No age variable found (PEAGE or PRTAGE).")
 
 # Main function
 def main() -> None:
@@ -202,8 +217,15 @@ def main() -> None:
     
     # Loop over all cleaned CPS data files
     for cleaned_data_file in tqdm(cleaned_data_files, desc="Adding child-related variables"):
+        # Load the cleaned CPS data
         child_data_file = CPS_DATA_CHILD_DIR / cleaned_data_file.name
-        child_data_df = prepare_dataframe(load_data(cleaned_data_file))
+        child_data_df = load_data(cleaned_data_file)
+        
+        # Update "AGE" variable
+        update_age(child_data_df)
+        
+        # Prepare the DataFrame
+        child_data_df = prepare_dataframe(child_data_df)
         child_data_df.to_csv(child_data_file, index=False)
 
         if "199403" in cleaned_data_file.name:

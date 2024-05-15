@@ -14,8 +14,10 @@ def clean_str_variables(data_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: The cleaned DataFrame.
     """
-    # Replace the "-" with NA in PTAGE variable
-    data_df["PTAGE"] = data_df["PTAGE"].replace("-", pd.NA).astype("Int64")
+    # Clean the data
+    for col in ['PRTAGE', 'PEAGE']: # These 2 columns are used as age variable interchangeably
+        if col in data_df.columns:
+            data_df[col] = pd.to_numeric(data_df[col], errors="coerce")
     
     return data_df
 
