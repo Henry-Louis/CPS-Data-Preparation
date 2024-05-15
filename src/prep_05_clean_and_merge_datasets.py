@@ -1,7 +1,7 @@
 from typing import List
 from pathlib import Path
 import pandas as pd
-from config import CPS_DATA_CHILD_DIR, MERGED_CSV_FILE
+from config import CPS_DATA_CHILD_DIR, CPS_DATA_MERGED_CSV
 from variable_typing import *
 
 def get_child_data_files(child_csv_dir: Path) -> List[Path]:
