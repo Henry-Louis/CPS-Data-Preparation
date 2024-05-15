@@ -1,20 +1,20 @@
 import subprocess
 import os
-from config import ROOT_DIR
+from config import ROOT_DIR, SRC_DIR
 
 if __name__ == "__main__":
     # Change the working directory to the root directory
     os.chdir(ROOT_DIR)
 
-    # Define the list of scripts to run
-    script_list = [
-        "download_01_cps_dictionaries_and_datasets.py", 
-        "prep_01_parse_cps_dictionaries.py", "prep_02_parse_cps_datasets.py",
-        "prep_03_clean_str_variables.py", "prep_04_construct_family_related_variables.py",
-        "prep_05_clean_and_merge_datasets.py", "prep_06_construct_cohort_id.py",
-        "plot_01_age_distribution.py"
-    ]
-
+    # Find all scripts in the src directory
+    script_list = list(SRC_DIR.glob("*.py"))
+    script_list.sort()
+    download_script_list = [script for script in script_list if script.name.startswith("download_")]
+    prep_script_list = [script for script in script_list if script.name.startswith("prep_")]
+    plot_script_list = [script for script in script_list if script.name.startswith("plot_")]
+    scripts_to_run = download_script_list + prep_script_list + plot_script_list
+    
     # Run all the scripts
-    for script in script_list:
-        subprocess.run(["python", f"src/{script}"])
+    for script in scripts_to_run:
+        print(f"Running {script.name}")
+        subprocess.run(["python", script])
