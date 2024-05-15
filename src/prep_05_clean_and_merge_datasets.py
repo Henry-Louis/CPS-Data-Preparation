@@ -56,7 +56,7 @@ def merge_datasets_and_save(data_files: List[Path], output_file: Path, needed_va
 
 def main() -> None:
     data_files = get_child_data_files(CPS_DATA_CHILD_DIR)
-    merge_datasets_and_save(data_files, MERGED_CSV_FILE, NEEDED_VARS)
+    merge_datasets_and_save(data_files, CPS_DATA_MERGED_CSV, NEEDED_VARS)
     print("Child datasets merged and saved.")
     
 if __name__ == "__main__":
